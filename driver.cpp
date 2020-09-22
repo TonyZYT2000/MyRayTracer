@@ -7,8 +7,8 @@
 
 bool hit_sphere(const vec3& center, double radius, const ray& r) {
     double a = dot(r.direction(), r.direction());
-    double b = 2 * dot(r.origin() - center, r.origin() - center);
-    double c = dot(center, center) - radius * radius;
+    double b = 2 * dot(r.direction(), r.origin() - center);
+    double c = dot(r.origin() - center, r.origin() - center) - radius * radius;
     double delta = b * b - 4 * a * c;
     return delta > 0;
 }
