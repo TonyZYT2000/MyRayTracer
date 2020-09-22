@@ -1,3 +1,4 @@
+#include <cmath>
 #include <fstream>
 #include <iostream>
 
@@ -5,20 +6,27 @@
 #include "vec3.hpp"
 
 
-bool hit_sphere(const vec3& center, double radius, const ray& r) {
+double hit_sphere(const vec3& center, double radius, const ray& r) {
     double a = dot(r.direction(), r.direction());
     double b = 2 * dot(r.direction(), r.origin() - center);
     double c = dot(r.origin() - center, r.origin() - center) - radius * radius;
     double delta = b * b - 4 * a * c;
-    return delta > 0;
+    if (delta < 0) {
+        return -1.0;
+    }
+    else {
+        return (-b - sqrt(delta)) / (2 * a);
+    }
 }
 
 vec3 color(const ray& r) {
-    if (hit_sphere(vec3(0, 0, -1), 0.5, r)) {
-        return vec3(1, 0, 0);
+    double t = hit_sphere(vec3(0, 0, -1), 0.5, r);
+    if (t > 0) {
+        vec3 normal = unit_vector(r.point_at_parameter(t) - vec3(0, 0, -1));
+        return vec3(normal.x() + 1, normal.y() + 1, normal.z() + 1) * 0.5;
     }
     vec3 unit_dir = unit_vector(r.direction());
-    double t = 0.5 * (unit_dir.y() + 1.0);
+    t = 0.5 * (unit_dir.y() + 1.0);
     return vec3(1.0, 1.0, 1.0) * (1.0 - t) + vec3(0.2, 0.7, 1.0) * t;
 }
 
