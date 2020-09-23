@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "color.hpp"
 #include "ray.hpp"
 #include "vec3.hpp"
 
@@ -43,7 +44,7 @@ int main(void) {
     vec3 horiz(4.0, 0.0, 0.0);
     vec3 vert(0.0, 2.0, 0.0);
 
-    hitable *list[2];
+    hitable* list[2];
     list[0] = new sphere(vec3(0, 0, -1), 0.5);
     list[1] = new sphere(vec3(0, -100.5, -1), 100);
     hitable* world = new hitable_list(list, 2);
@@ -54,11 +55,8 @@ int main(void) {
             double v = double(j) / double(ny);
             ray r(origin, lower_left_corner + horiz * u + vert * v);
 
-            vec3 pixel(color(r));
-            int ir = int(255.99 * pixel.x());
-            int ig = int(255.99 * pixel.y());
-            int ib = int(255.99 * pixel.z());
-            output << ir << " " << ig << " " << ib << "\n";
+            color3 pixel(color(r));
+            write_color(output, pixel);
         }
     }
 
