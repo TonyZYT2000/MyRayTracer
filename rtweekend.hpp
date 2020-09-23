@@ -20,6 +20,17 @@ double degrees_to_radius(double degrees) {
     return degrees * pi / 180.0;
 }
 
+// Random Generater
+double random_double() {
+    // return a random real number in [0, 1)
+    return rand() / (RAND_MAX + 1.0);
+}
+
+double random_double(double min, double max) {
+    // return a random real number in [min, max)
+    return min + (max - min) * random_double();
+}
+
 // Common Headers
 
 #include "ray.hpp"
