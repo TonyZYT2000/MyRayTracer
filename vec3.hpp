@@ -4,6 +4,8 @@
 #include <cmath>
 #include <iostream>
 
+#include "rtweekend.hpp"
+
 class vec3 {
   private:
     double v[3];
@@ -44,6 +46,10 @@ class vec3 {
     double length() const;
     double squared_length() const;
     void make_unit_vector();
+
+    // Random Generators
+    static vec3 random();
+    static vec3 random(double min, double max);
 };
 
 // Arithmetic Operators
@@ -130,5 +136,23 @@ vec3 cross(const vec3& v1, const vec3& v2) {
                 v1[0] * v2[1] - v1[1] * v2[0]);
 }
 vec3 unit_vector(const vec3& v) { return v / v.length(); }
+
+// Random Generators
+vec3 vec3::random() {
+    return vec3(random_double(), random_double(), random_double());
+}
+vec3 vec3::random(double min, double max) {
+    return vec3(random_double(min, max), random_double(min, max),
+                random_double(min, max));
+}
+vec3 random_in_unit_sphere() {
+    while (true) {
+        auto p = vec3::random(-1, 1);
+        if (p.squared_length() >= 1) {
+            continue;
+        }
+        return p;
+    }
+}
 
 #endif

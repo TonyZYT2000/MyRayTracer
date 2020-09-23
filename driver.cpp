@@ -7,10 +7,17 @@
 #include "rtweekend.hpp"
 #include "sphere.hpp"
 
-color3 ray_color(const ray& r, const hittable& world) {
+color3 ray_color(const ray& r, const hittable& world, int depth) {
     hit_record record;
+
+    // reaching maximum depth
+    if (depth <= 0) {
+        return color3(0, 0, 0);
+    }
+
     if (world.hit(r, 0, infinity, record)) {
-        return 0.5 * (record.normal + color3(1, 1, 1));
+        point3 target = record.point + record.normal + random_in_unit_sphere();
+        return 0.5 * ray_color(ray(record.point, target - record.point), world, depth - 1);
     } else {
         vec3 unit_dir = unit_vector(r.direction());
         double t = 0.5 * (unit_dir.y() + 1.0);
@@ -24,6 +31,7 @@ int main(void) {
     const int image_width = 600;
     const int image_height = (int)(image_width / aspect_ratio);
     const int samples_per_pixel = 100;
+    const int max_depth = 50;
 
     // Open File
     std::ofstream output;
@@ -48,7 +56,7 @@ int main(void) {
                 auto u = (i + random_double()) / (image_width - 1);
                 auto v = (j + random_double()) / (image_height - 1);
                 ray r = cam.get_ray(u, v);
-                pixel_color += ray_color(r, world);
+                pixel_color += ray_color(r, world, max_depth);
             }
             write_color(output, pixel_color, samples_per_pixel);
         }
