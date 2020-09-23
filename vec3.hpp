@@ -70,37 +70,37 @@ vec3 vec3::operator/(const double t) const {
 vec3& vec3::operator+=(const vec3& v2) {
     v[0] += v2[0];
     v[1] += v2[1];
-    v[3] += v2[3];
+    v[2] += v2[2];
     return *this;
 }
 vec3& vec3::operator-=(const vec3& v2) {
     v[0] -= v2[0];
     v[1] -= v2[1];
-    v[3] -= v2[3];
+    v[2] -= v2[2];
     return *this;
 }
 vec3& vec3::operator*=(const vec3& v2) {
     v[0] *= v2[0];
     v[1] *= v2[1];
-    v[3] *= v2[3];
+    v[2] *= v2[2];
     return *this;
 }
 vec3& vec3::operator/=(const vec3& v2) {
     v[0] /= v2[0];
     v[1] /= v2[1];
-    v[3] /= v2[3];
+    v[2] /= v2[2];
     return *this;
 }
 vec3& vec3::operator*=(const double t) {
     v[0] *= t;
     v[1] *= t;
-    v[3] *= t;
+    v[2] *= t;
     return *this;
 }
 vec3& vec3::operator/=(const double t) {
     v[0] /= t;
     v[1] /= t;
-    v[3] /= t;
+    v[2] /= t;
     return *this;
 }
 
