@@ -1,6 +1,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "camera.hpp"
 #include "color.hpp"
 #include "hittable_list.hpp"
 #include "rtweekend.hpp"
@@ -22,6 +23,7 @@ int main(void) {
     const double aspect_ratio = 16.0 / 9.0;
     const int image_width = 600;
     const int image_height = (int)(image_width / aspect_ratio);
+    const int samples_per_pixel = 100;
 
     // Open File
     std::ofstream output;
@@ -33,26 +35,22 @@ int main(void) {
     world.add(make_shared<sphere>(point3(0, -100.5, -1), 100));
 
     // Camera
-    double viewport_height = 2.0;
-    double viewport_width = aspect_ratio * viewport_height;
-    double focal_length = 1.0;
-
-    point3 origin(0, 0, 0);
-    vec3 horiz(viewport_width, 0, 0);
-    vec3 vert(0, viewport_height, 0);
-    auto lower_left_corner =
-        origin - horiz / 2 - vert / 2 - vec3(0, 0, focal_length);
+    camera cam;
 
     // Renderer
     output << "P3\n" << image_width << ' ' << image_height << "\n255\n";
     for (int j = image_height - 1; j >= 0; --j) {
         std::cerr << "\rScanlines reamaining: " << j << ' ' << std::flush;
         for (int i = 0; i < image_width; ++i) {
-            auto u = double(i) / (image_width - 1);
-            auto v = double(j) / (image_height - 1);
-            ray r(origin, lower_left_corner + horiz * u + vert * v);
-            color3 pixel = ray_color(r, world);
-            write_color(output, pixel);
+            color3 pixel_color(0, 0, 0);
+            // Anti-Aliasing by sampling multiple times for single pixel
+            for (int s = 0; s < samples_per_pixel; ++s) {
+                auto u = (i + random_double()) / (image_width - 1);
+                auto v = (j + random_double()) / (image_height - 1);
+                ray r = cam.get_ray(u, v);
+                pixel_color += ray_color(r, world);
+            }
+            write_color(output, pixel_color, samples_per_pixel);
         }
     }
     std::cerr << "\nDone.\n";
