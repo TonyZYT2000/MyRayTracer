@@ -1,64 +1,61 @@
-#include <cmath>
 #include <fstream>
 #include <iostream>
 
 #include "color.hpp"
-#include "ray.hpp"
-#include "vec3.hpp"
+#include "hittable_list.hpp"
+#include "rtweekend.hpp"
+#include "sphere.hpp"
 
-
-double hit_sphere(const vec3& center, double radius, const ray& r) {
-    double a = dot(r.direction(), r.direction());
-    double b = 2 * dot(r.direction(), r.origin() - center);
-    double c = dot(r.origin() - center, r.origin() - center) - radius * radius;
-    double delta = b * b - 4 * a * c;
-    if (delta < 0) {
-        return -1.0;
+color3 ray_color(const ray& r, const hittable& world) {
+    hit_record record;
+    if (world.hit(r, 0, infinity, record)) {
+        return 0.5 * (record.normal + color3(1, 1, 1));
+    } else {
+        vec3 unit_dir = unit_vector(r.direction());
+        double t = 0.5 * (unit_dir.y() + 1.0);
+        return (1.0 - t) * color3(1.0, 1.0, 1.0) + t * color3(0.5, 0.7, 1.0);
     }
-    else {
-        return (-b - sqrt(delta)) / (2 * a);
-    }
-}
-
-vec3 color(const ray& r) {
-    double t = hit_sphere(vec3(0, 0, -1), 0.5, r);
-    if (t > 0) {
-        vec3 normal = unit_vector(r.point_at_parameter(t) - vec3(0, 0, -1));
-        return vec3(normal.x() + 1, normal.y() + 1, normal.z() + 1) * 0.5;
-    }
-    vec3 unit_dir = unit_vector(r.direction());
-    t = 0.5 * (unit_dir.y() + 1.0);
-    return vec3(1.0, 1.0, 1.0) * (1.0 - t) + vec3(0.2, 0.7, 1.0) * t;
 }
 
 int main(void) {
-    int nx = 200;
-    int ny = 100;
+    // Image
+    const double aspect_ratio = 16.0 / 9.0;
+    const int image_width = 600;
+    const int image_height = (int)(image_width / aspect_ratio);
 
+    // Open File
     std::ofstream output;
     output.open("output.ppm");
-    output << "P3\n" << nx << " " << ny << "\n255\n";
 
-    vec3 lower_left_corner(-2.0, -1.0, -1.0);
-    vec3 origin(0.0, 0.0, 0.0);
-    vec3 horiz(4.0, 0.0, 0.0);
-    vec3 vert(0.0, 2.0, 0.0);
+    // World
+    hittable_list world;
+    world.add(make_shared<sphere>(point3(0, 0, -1), 0.5));
+    world.add(make_shared<sphere>(point3(0, -100.5, -1), 100));
 
-    hitable* list[2];
-    list[0] = new sphere(vec3(0, 0, -1), 0.5);
-    list[1] = new sphere(vec3(0, -100.5, -1), 100);
-    hitable* world = new hitable_list(list, 2);
+    // Camera
+    double viewport_height = 2.0;
+    double viewport_width = aspect_ratio * viewport_height;
+    double focal_length = 1.0;
 
-    for (int j = ny - 1; j >= 0; j--) {
-        for (int i = 0; i < nx; i++) {
-            double u = double(i) / double(nx);
-            double v = double(j) / double(ny);
+    point3 origin(0, 0, 0);
+    vec3 horiz(viewport_width, 0, 0);
+    vec3 vert(0, viewport_height, 0);
+    auto lower_left_corner =
+        origin - horiz / 2 - vert / 2 - vec3(0, 0, focal_length);
+
+    // Renderer
+    output << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+    for (int j = image_height - 1; j >= 0; --j) {
+        std::cerr << "\rScanlines reamaining: " << j << ' ' << std::flush;
+        for (int i = 0; i < image_width; ++i) {
+            auto u = double(i) / (image_width - 1);
+            auto v = double(j) / (image_height - 1);
             ray r(origin, lower_left_corner + horiz * u + vert * v);
-
-            color3 pixel(color(r));
+            color3 pixel = ray_color(r, world);
             write_color(output, pixel);
         }
     }
+    std::cerr << "\nDone.\n";
 
     output.close();
     return 0;

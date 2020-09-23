@@ -3,7 +3,8 @@
 
 CC = g++
 CFLAGS = -Wall -g -std=c++11
-HEADERS = vec3.hpp ray.hpp hitable.hpp sphere.hpp hitable_list.hpp
+HEADERS = vec3.hpp ray.hpp color.hpp rtweekend.hpp hittable.hpp\
+		sphere.hpp hittable_list.hpp
 
 driver: driver.exe
 

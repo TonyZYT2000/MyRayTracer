@@ -13,7 +13,7 @@ class ray {
     ray(const vec3& ori, const vec3& dir) : ori(ori), dir(dir) {}
     vec3 origin() const { return ori; }
     vec3 direction() const { return dir; }
-    vec3 point_at_parameter(double t) const { return ori + dir * t; }
+    vec3 at(double t) const { return ori + dir * t; }
 };
 
 #endif
