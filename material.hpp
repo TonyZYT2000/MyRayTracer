@@ -40,9 +40,52 @@ class metal : public material {
     virtual bool scatter(const ray& r_in, const hit_record& record,
                          color3& attenuation, ray& scattered) const override {
         vec3 reflected = reflect(unit_vector(r_in.direction()), record.normal);
-        scattered = ray(record.point, reflected + fuzz * random_in_unit_sphere());
+        scattered =
+            ray(record.point, reflected + fuzz * random_in_unit_sphere());
         attenuation = albedo;
         return (dot(scattered.direction(), record.normal) > 0);
+    }
+};
+
+class dielectric : public material {
+  private:
+    double ref_index;
+
+    static double schlick(double cosine, double ri) {
+        auto r0 = (1 - ri) / (1 + ri);
+        r0 = r0 * r0;
+        return r0 + (1 - r0) * pow((1 - cosine), 5);
+    }
+
+  public:
+    dielectric() : ref_index(1) {}
+    dielectric(double ri) : ref_index(ri) {}
+
+    virtual bool scatter(const ray& r_in, const hit_record& record,
+                         color3& attenuation, ray& scattered) const override {
+        attenuation = color3(1, 1, 1);
+        double etai_over_etat = record.front_face ? (1 / ref_index) : ref_index;
+        vec3 v_in = r_in.direction();
+
+        double cos_theta = dot(-v_in, record.normal) / v_in.length();
+        double sin_theta = sqrt(1 - cos_theta * cos_theta);
+
+        if (etai_over_etat * sin_theta > 1) {
+            vec3 reflected = reflect(v_in, record.normal);
+            scattered = ray(record.point, reflected);
+            return true;
+        }
+
+        double reflect_prob = schlick(cos_theta, etai_over_etat);
+        if (random_double() < reflect_prob) {
+            vec3 reflected = reflect(v_in, record.normal);
+            scattered = ray(record.point, reflected);
+            return true;
+        } else {
+            vec3 refracted = refract(v_in, record.normal, etai_over_etat);
+            scattered = ray(record.point, refracted);
+            return true;
+        }
     }
 };
 
