@@ -4,6 +4,7 @@
 #include "camera.hpp"
 #include "color.hpp"
 #include "hittable_list.hpp"
+#include "material.hpp"
 #include "rtweekend.hpp"
 #include "sphere.hpp"
 
@@ -16,10 +17,13 @@ color3 ray_color(const ray& r, const hittable& world, int depth) {
     }
 
     if (world.hit(r, 0.001, infinity, record)) {
-        point3 target =
-            record.point + record.normal + random_in_hemisphere(record.normal);
-        return 0.5 * ray_color(ray(record.point, target - record.point), world,
-                               depth - 1);
+        ray scattered;
+        color3 attenuation;
+        if (record.mat_ptr->scatter(r, record, attenuation, scattered)) {
+            return attenuation * ray_color(scattered, world, depth - 1);
+        } else {
+            return color3(0, 0, 0);
+        }
     } else {
         vec3 unit_dir = unit_vector(r.direction());
         double t = 0.5 * (unit_dir.y() + 1.0);
@@ -41,8 +45,16 @@ int main(void) {
 
     // World
     hittable_list world;
-    world.add(make_shared<sphere>(point3(0, 0, -1), 0.5));
-    world.add(make_shared<sphere>(point3(0, -100.5, -1), 100));
+
+    auto material_ground = make_shared<lambertian>(color3(0.8, 0.8, 0));
+    auto material_center = make_shared<lambertian>(color3(0.7, 0.3, 0.3));
+    auto material_left = make_shared<metal>(color3(0.8, 0.8, 0.8));
+    auto material_right = make_shared<metal>(color3(0.8, 0.6, 0.2));
+
+    world.add(make_shared<sphere>(point3(0, -100.5, -1), 100, material_ground));
+    world.add(make_shared<sphere>(point3(0, 0, -1), 0.5, material_center));
+    world.add(make_shared<sphere>(point3(-1, 0, -1), 0.5, material_left));
+    world.add(make_shared<sphere>(point3(1, 0, -1), 0.5, material_right));
 
     // Camera
     camera cam;

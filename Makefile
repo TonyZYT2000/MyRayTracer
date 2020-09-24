@@ -7,7 +7,7 @@ CC = g++
 CFLAGS = -Wall -g -Og -std=c++11
 FASTFLAGS = -O3
 HEADERS = vec3.hpp ray.hpp camera.hpp color.hpp hittable.hpp hittable_list.hpp\
-		rtweekend.hpp sphere.hpp
+		material.hpp rtweekend.hpp sphere.hpp
 
 all: driver driver_fast
 

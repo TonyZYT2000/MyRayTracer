@@ -136,6 +136,7 @@ vec3 cross(const vec3& v1, const vec3& v2) {
                 v1[0] * v2[1] - v1[1] * v2[0]);
 }
 vec3 unit_vector(const vec3& v) { return v / v.length(); }
+vec3 reflect(const vec3& v, const vec3& n) { return v - 2 * dot(v, n) * n; }
 
 // Random Generators
 vec3 vec3::random() {
