@@ -175,5 +175,11 @@ vec3 random_in_hemisphere(const vec3& normal) {
         return -in_unit_sphere;
     }
 }
+vec3 random_in_unit_disk() {
+    auto a = random_double(0, 2 * pi);
+    auto r = random_double(-1, 1);
+
+    return vec3(r * cos(a), r * sin(a), 0);
+}
 
 #endif

@@ -58,7 +58,12 @@ int main(void) {
     world.add(make_shared<sphere>(point3(1, 0, -1), 0.5, material_right));
 
     // Camera
-    camera cam(point3(-2, 2, 1), point3(0, 0, -1), vec3(0, 1, 0), 20, aspect_ratio);
+    point3 lookfrom(3, 3, 2);
+    point3 lookat(0, 0, -1);
+    vec3 vup(0, 1, 0);
+    double focus_dist = (lookfrom - lookat).length();
+    double aperture = 1.0;
+    camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, focus_dist);
 
     // Renderer
     output << "P3\n" << image_width << ' ' << image_height << "\n255\n";
