@@ -1,5 +1,7 @@
 #include <fstream>
+#include <future>
 #include <iostream>
+#include <vector>
 
 #include "camera.hpp"
 #include "color.hpp"
@@ -40,7 +42,8 @@ hittable_list random_scene() {
     for (int a = -11; a < 11; ++a) {
         for (int b = -11; b < 11; ++b) {
             auto choose_mat = random_double();
-            point3 center(a + 0.9 * random_double(), 0.2, b + 0.9 * random_double());
+            point3 center(a + 0.9 * random_double(), 0.2,
+                          b + 0.9 * random_double());
 
             if ((center - point3(4, 0.2, 0)).length() > 0.9) {
                 shared_ptr<material> sphere_material;
@@ -49,19 +52,20 @@ hittable_list random_scene() {
                     // diffuse
                     auto albedo = color3::random() * color3::random();
                     sphere_material = make_shared<lambertian>(albedo);
-                    world.add(make_shared<sphere>(center, 0.2, sphere_material));
-                }
-                else if (choose_mat < 0.95) {
+                    world.add(
+                        make_shared<sphere>(center, 0.2, sphere_material));
+                } else if (choose_mat < 0.95) {
                     // metal
                     auto albedo = color3::random(0.5, 1);
                     auto fuzz = random_double(0, 0.5);
                     sphere_material = make_shared<metal>(albedo, fuzz);
-                    world.add(make_shared<sphere>(center, 0.2, sphere_material));
-                }
-                else {
+                    world.add(
+                        make_shared<sphere>(center, 0.2, sphere_material));
+                } else {
                     // glass
                     sphere_material = make_shared<dielectric>(1.5);
-                    world.add(make_shared<sphere>(center, 0.2, sphere_material));
+                    world.add(
+                        make_shared<sphere>(center, 0.2, sphere_material));
                 }
             }
         }
@@ -79,6 +83,28 @@ hittable_list random_scene() {
     return world;
 }
 
+void renderer(hittable_list& world, camera& cam, const int image_height,
+              const int image_width, int& start_height, const int end_height,
+              const int samples_per_pixel, const int max_depth,
+              std::vector<color3>& pixels) {
+    int start = start_height;
+    start_height = end_height;
+    for (int j = start; j >= end_height; --j) {
+        // std::cerr << "\rScanlines reamaining: " << j << ' ' << std::flush;
+        for (int i = 0; i < image_width; ++i) {
+            color3 pixel_color(0, 0, 0);
+            // Anti-Aliasing by sampling multiple times for single pixel
+            for (int s = 0; s < samples_per_pixel; ++s) {
+                auto u = (i + random_double()) / (image_width - 1);
+                auto v = (j + random_double()) / (image_height - 1);
+                ray r = cam.get_ray(u, v);
+                pixel_color += ray_color(r, world, max_depth);
+            }
+            pixels[i + (image_height - j - 1) * image_width] = pixel_color;
+        }
+    }
+}
+
 int main(void) {
     // Image
     const double aspect_ratio = 3.0 / 2.0;
@@ -86,12 +112,14 @@ int main(void) {
     const int image_height = (int)(image_width / aspect_ratio);
     const int samples_per_pixel = 500;
     const int max_depth = 50;
+    const int threads = 32;
 
     // Open File
     std::ofstream output;
     output.open("output.ppm");
 
     // World
+    srand(time(0));
     auto world = random_scene();
 
     // Camera
@@ -103,7 +131,31 @@ int main(void) {
     camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, focus_dist);
 
     // Renderer
-    output << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+    auto pixels = std::vector<color3>(image_height * image_width);
+    auto ft_list = std::vector<std::future<void>>(threads);
+    int start_height = image_height - 1;
+    int step = image_height / threads;
+
+    for (auto& ft : ft_list) {
+        int end_height =
+            ((start_height - step) > 0 ? (start_height - step) : 0);
+        ft = std::async(std::launch::async, [&] {
+            renderer(world, cam, image_height, image_width, start_height,
+                     end_height, samples_per_pixel, max_depth, pixels);
+        });
+        while (start_height != end_height) {
+            std::cerr << '\0';
+        }
+        start_height -= 1;
+    }
+    std::cerr << "Finishing creating jobs" << std::endl;
+
+    for (auto& ft : ft_list) {
+        ft.wait();
+    }
+    std::cerr << "Finishing running jobs" << std::endl;
+
+    /*
     for (int j = image_height - 1; j >= 0; --j) {
         std::cerr << "\rScanlines reamaining: " << j << ' ' << std::flush;
         for (int i = 0; i < image_width; ++i) {
@@ -117,6 +169,12 @@ int main(void) {
             }
             write_color(output, pixel_color, samples_per_pixel);
         }
+    }
+    */
+
+    output << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+    for (auto pixel_color : pixels) {
+        write_color(output, pixel_color, samples_per_pixel);
     }
     std::cerr << "\nDone.\n";
 
