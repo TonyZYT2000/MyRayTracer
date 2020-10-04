@@ -1,0 +1,6 @@
+# Google Style Guide with 4 columns indentation.
+BasedOnStyle: Google
+IndentWidth: 4
+DerivePointerBinding: false
+PointerBindsToType: true
+AccessModifierOffset: -2
