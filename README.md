@@ -6,9 +6,12 @@ This is based on [Peter Shirley](https://github.com/petershirley)'s fantastic tu
 
 ## Build
 
-Type `make` in command line to build all targets.
+Type `mkdir build && cd build` to create the build directory where project will be generated.
 
-All other make options are listed in the Makefile.
+- Use `cmake -DCMAKE_BUILD_TYPE=Release ..` for release build.
+- Use `cmake -DCMAKE_BUILD_TYPE=Debug ..` for debug build.
+
+Add flag `-G "Unix Makefiles"` to force generating Makefile project.
 
 ## Artworks!
 
