@@ -1,6 +1,3 @@
 .*
-*.o
 *.swp
-*.exe
-*.ppm
-obj/*
+build
